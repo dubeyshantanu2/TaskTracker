@@ -1,74 +1,99 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+import { StatusBar } from "expo-status-bar";
+import React, { useCallback, useRef, useState } from "react";
+import {
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TextInput,
+  Button,
+} from "react-native";
+import {
+  ScrollView,
+  GestureHandlerRootView,
+} from "react-native-gesture-handler";
+import ListItem from "../../components/ListItem";
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+interface TaskInterface {
+  title: string;
+  index: number;
+}
 
-export default function HomeScreen() {
+function App() {
+  const [tasks, setTasks] = useState([]);
+  const [newTask, setNewTask] = useState("");
+
+  const addTask = () => {
+    if (newTask.trim()) {
+      setTasks([
+        ...tasks,
+        {
+          index: Date.now().toString(),
+          title: newTask,
+          dueDate: "2024-11-20",
+          category: "Work",
+        },
+      ]);
+      setNewTask("");
+    }
+  };
+
+  const onDismiss = useCallback((task: TaskInterface) => {
+    setTasks((tasks) => tasks.filter((item) => item.index !== task.index));
+  }, []);
+
+  const scrollRef = useRef(null);
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12'
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    <SafeAreaView style={styles.container}>
+      <StatusBar style="auto" />
+      <Text style={styles.title}>Enter Task</Text>
+      <TextInput
+        value={newTask}
+        onChangeText={setNewTask}
+        placeholder="Enter a new task"
+        style={styles.input}
+      />
+      <Button title="Add Task" onPress={addTask} />
+      <Text style={styles.title}>Tasks List</Text>
+      <ScrollView ref={scrollRef} style={{ flex: 1 }}>
+        {tasks.map((task) => (
+          <ListItem
+            simultaneousHandlers={scrollRef}
+            key={task.index}
+            task={task}
+            onDismiss={onDismiss}
+          />
+        ))}
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
+export default () => {
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <App />
+    </GestureHandlerRootView>
+  );
+};
+
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container: {
+    flex: 1,
+    backgroundColor: "#FAFBFF",
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  title: {
+    fontSize: 60,
+    marginVertical: 20,
+    paddingLeft: "5%",
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  input: {
+    borderWidth: 2,
+    borderRadius: 10,
+    paddingHorizontal: 20,
+    height: 50,
+    marginHorizontal: "5%",
   },
 });
+
+export { TaskInterface };
